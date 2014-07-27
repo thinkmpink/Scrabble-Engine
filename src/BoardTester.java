@@ -12,13 +12,10 @@ public class BoardTester {
 
 		b.updateBoardTemplate();
 		
-		b.addWordNaive("quick", 3, 4, 3, 8);
-		b.addWordNaive("quite", 2, 5, 6, 5);
-
-		//b.printBoardUpper();
-		//System.out.println(b.collectWord(3, 5, true));
-		//System.out.println(b.collectWord(3, 5, false));
+		Player p = new Player();
+		p.fillHandUser(b, "q", "q");
 		
+	
 
 	}
 

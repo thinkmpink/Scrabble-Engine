@@ -364,7 +364,28 @@ public class Board {
 		return true;
 	}
 	
+	/**
+	 * Iterates through the Board and returns the first empty spot
+	 * @return the first empty spot as an array [row, column]
+	 */
+	private int[] getEmptySpot() {
+		int[] spot = new int[2];
+		spot[0] = 0;
+		spot[1] = 0;
+		for (int r=0; r<ROWS; r++) {
+			for (int c=0; c<COLUMNS; c++) {
+				if (scrabbleBoard[r][c][0]=='-'){
+					spot[0] = r;
+					spot[1] = c;
+					break;
+				}
+			}
+
+		}
+		return spot;
+	}
 	
+
 	
 	
 	
@@ -731,9 +752,16 @@ public class Board {
 				}
 			}
 		}
-				
-						//different validWord for diff conditions
-		System.out.println(highestPoints);
+		if(optimalWord[0]=="") { //if there is no optimal word, set it to the blank
+			int[] emptySpot = this.getEmptySpot();
+			optimalWord[0]="-"; //and return and empty spot on the Board as the indexes
+			optimalWord[1]="spot";
+			optimalWord[2] = Integer.toString(emptySpot[0]);
+			optimalWord[3] = Integer.toString(emptySpot[1]);
+			optimalWord[4] = Integer.toString(emptySpot[0]);
+			optimalWord[5] = Integer.toString(emptySpot[1]);
+			System.out.println("no optimal word");
+		}
 		return optimalWord;
 
 	}

@@ -24,13 +24,6 @@ public class GameTester {
 				+ " with correct input file name");
 		}
 		
-		// catches if there is no optimal word
-		catch (NumberFormatException e) {
-			System.out.println("Sorry, there is no"
-				+ " optimal word for your hand.");
-			
-		}
-		
 		catch (InputMismatchException e) {
 			System.out.println("Please enter input"
 				+ "of a type appropriate to the question");

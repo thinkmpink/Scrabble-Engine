@@ -33,9 +33,12 @@ public class Game {
 
 			System.out.println("Welcome to Scrabble-Engine!");
 			System.out.println("How many players do you want?" 
-					+ " (Game supports up to 4 players.)");
+					+ " (Game supports up to 10 players.)");
 			
 			int numPlayers = in.nextInt();
+			if (numPlayers > 10) {
+				//TODO handle excessively high player number input 
+			}
 			if (numPlayers > 1) {
 				this.multiPlayer(numPlayers);
 			} 

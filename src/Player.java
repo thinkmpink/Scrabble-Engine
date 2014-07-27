@@ -18,6 +18,18 @@ public class Player {
 		name = "";
 	}
 
+	/**
+	 * Fills the user's hand with inputted String letters 
+	 * @param b
+	 * @param letter
+	 */
+	public void fillHandUser (Board b, String... letter) {
+		for (int i=0; i<letter.length; i++) {
+			hand.add(letter[i]);
+			b.useLettersBoard(letter[i]);
+		}
+	}
+	
 	
 	/**
 	 * Fills the Player's hand with 7 letters if possible, else
