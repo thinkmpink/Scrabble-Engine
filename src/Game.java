@@ -36,9 +36,11 @@ public class Game {
 					+ " (Game supports up to 10 players.)");
 			
 			int numPlayers = in.nextInt();
-			if (numPlayers > 10) {
-				//TODO handle excessively high player number input 
+			while (numPlayers > 10) {
+				numPlayers = Math.floorDiv(numPlayers, 10);
 			}
+			System.out.println("Game will accept "+numPlayers+" players.");
+			
 			if (numPlayers > 1) {
 				this.multiPlayer(numPlayers);
 			} 
