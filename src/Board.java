@@ -416,7 +416,7 @@ public class Board {
 			return false;
 		}
 		
-		if (!(this.unusedWord(lettersPlayerHas, word, sri, sci, eri, eci))) { 
+		if (!(this.unusedWord(word, sri, sci, eri, eci))) { 
 			return false;
 		}
 		
@@ -464,7 +464,7 @@ public class Board {
 			return false;
 		}
 		
-		if (!(this.unusedWord(lettersPlayerHas, word, sri, sci, eri, eci))) { 
+		if (!(this.unusedWord(word, sri, sci, eri, eci))) { 
 			return false;
 		}	
 		return true; 	
@@ -551,8 +551,8 @@ public class Board {
 	 * @return an ArrayList of letters in a dictionary entry 
 	 * that may be placed on the board
 	 */
-	private ArrayList<String> lettersNeeded (ArrayList<String> lettersPlayerHas, 
-			String word, int sri, int sci, int eri, int eci) {		
+	private ArrayList<String> lettersNeeded (String word,
+			int sri, int sci, int eri, int eci) {		
 		
 		ArrayList<String> lettersNeeded = new ArrayList<String>();
 
@@ -588,9 +588,9 @@ public class Board {
 	 * @param b
 	 * @return lettersNeeded
 	 */
-	public ArrayList<String> getLettersNeeded (ArrayList<String> lettersPlayerHas, 
-			String word, int sri, int sci, int eri, int eci, Board b) {
-		return b.lettersNeeded(lettersPlayerHas, word, sri, sci, eri, eci);
+	public ArrayList<String> getLettersNeeded (String word, 
+			int sri, int sci, int eri, int eci, Board b) {
+		return b.lettersNeeded(word, sri, sci, eri, eci);
 	}
 	
 	/**
@@ -625,9 +625,9 @@ public class Board {
 	/**
 	 * @return false if the word is already on the board
 	 */
-	private boolean unusedWord(ArrayList<String> lettersPlayerHas, String word,
+	private boolean unusedWord(String word,
 			int sri, int sci, int eri, int eci) {
-		return this.lettersNeeded(lettersPlayerHas, word, sri, sci, eri, eci).size()>0;
+		return this.lettersNeeded(word, sri, sci, eri, eci).size()>0;
 	} 
 
 	/**
@@ -635,7 +635,7 @@ public class Board {
 	 */
 	private boolean canSpell(ArrayList<String> lettersPlayerHas, String word, 
 			int sri, int sci, int eri, int eci) {
-		ArrayList<String> lettersNeeded = this.lettersNeeded(lettersPlayerHas, word, sri, sci, eri, eci);
+		ArrayList<String> lettersNeeded = this.lettersNeeded(word, sri, sci, eri, eci);
 		
 		
 		ArrayList<String> hand = new ArrayList<String>();
@@ -656,7 +656,19 @@ public class Board {
 		return true;
 	}
 	
-	
+	/**
+	 * @return true if the player needs to use all his/her letters to spell the word
+	 * @param lettersPlayerHas
+	 * @param word
+	 * @param sri
+	 * @param sci
+	 * @param eri
+	 * @param eci
+	 */
+	private boolean usesAllPlayerLetters(String word,
+			int sri, int sci, int eri, int eci) {
+		return this.lettersNeeded(word, sri, sci, eri, eci).size()==7;
+	}
 
 	
 	
@@ -707,18 +719,18 @@ public class Board {
 					String viStr = Integer.toString(verticalIndex);
 					if (this.isEmpty()) {
 						if (this.firstMoveValid(hand, currentWord, r, c, r, horizIndex, d)) {
-							pointsH = this.wordPoints(currentWord, r, c, r, horizIndex);
+							pointsH = this.wordPoints(hand, currentWord, r, c, r, horizIndex);
 						}
 						if (this.firstMoveValid(hand, currentWord, r, c, verticalIndex, c, d)) {
-							pointsV = this.wordPoints(currentWord, r, c, verticalIndex, c);
+							pointsV = this.wordPoints(hand, currentWord, r, c, verticalIndex, c);
 						}
 					}
 					else {
 						if (this.validWord(hand, currentWord, r, c, r, horizIndex, d)) {
-							pointsH = this.wordPoints(currentWord, r, c, r, horizIndex); //verticalIndex
+							pointsH = this.wordPoints(hand, currentWord, r, c, r, horizIndex); //verticalIndex
 						}
 						if (this.validWord(hand, currentWord, r, c, verticalIndex, c, d)) {
-							pointsV = this.wordPoints(currentWord, r, c, verticalIndex, c);
+							pointsV = this.wordPoints(hand, currentWord, r, c, verticalIndex, c);
 						}
 					}	
 
@@ -877,10 +889,29 @@ public class Board {
 	}
 
 	/**
+	 * Adds a bonus for using all 7 letters in a Player's hand
+	 * @param hand
+	 * @param word
+	 * @param sri
+	 * @param sci
+	 * @param eri
+	 * @param eci
+	 * @return +50 points if Player gets bonus, otherwise +0 points
+	 */
+	private int bonus(ArrayList<String> hand, String word, 
+			int sri, int sci, int eri, int eci) {
+		int bonus = 0;
+		if (this.usesAllPlayerLetters(word, sri, sci, eri, eci)) {
+			bonus += 50;
+		}
+		return bonus;
+	}
+	
+	/**
 	 * Adds letter points in word, multiplies by letter & word coefficients
 	 * @return total points for a word
 	 */
-	private int setWordPoints(String word, int sri, int sci, int eri, int eci) {
+	private int setWordPoints(ArrayList<String> hand, String word, int sri, int sci, int eri, int eci) {
 		int points = 0;
 		ArrayList<Integer> lCoefficients = new ArrayList<Integer>();
 		for (int j = 0; j<this.letterCoefficients(sri, sci, eri, eci).size(); j++) {
@@ -888,6 +919,8 @@ public class Board {
 		}
 		int wCoefficients = this.wordCoefficients(sri, sci, eri, eci);
 		int[] letterValue = new int[15];
+		
+		int bonus = this.bonus(hand, word, sri, sci, eri, eci);
 
 		for (int i = 0; i < word.length(); i++) {
 			letterValue[i] = letterPoints(word.substring(i, i+1));
@@ -895,14 +928,16 @@ public class Board {
 			points += letterValue[i];
 		}
 		points *= wCoefficients;
+		points += bonus;
 
 		return points;
 	}
 
-	public int wordPoints(String word, int sri, int sci, int eri, int eci) {
-		return this.setWordPoints(word, sri, sci, eri, eci);
+	public int wordPoints(ArrayList<String> hand, String word, int sri, int sci, int eri, int eci) {
+		return this.setWordPoints(hand, word, sri, sci, eri, eci);
 	}
-
+	
+	
 	/**
 	 * Clears the multiple letter and word scores
 	 * so that they may only be used once per game

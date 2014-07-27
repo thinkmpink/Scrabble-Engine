@@ -67,7 +67,7 @@ public class Player {
 	 * Removes from Player's hand the letters needed to spell the optimal word
 	 */
 	private void useLettersHand(String word, int sri, int sci, int eri, int eci, Board b) {
-		ArrayList<String> needed = b.getLettersNeeded(hand, word, sri, sci, eri, eci, b);
+		ArrayList<String> needed = b.getLettersNeeded(word, sri, sci, eri, eci, b);
 		for (int i=0; i<needed.size(); i++) {
 			hand.remove(needed.get(i));
 		}
@@ -84,7 +84,7 @@ public class Player {
 	public void playWord(String word, int sri, int sci, int eri, int eci, Board b) {
 		this.useLettersHand(word, sri, sci, eri, eci, b);
 		b.addWord(word, sri, sci, eri, eci);
-		int points = b.wordPoints(word, sri, sci, eri, eci);
+		int points = b.wordPoints(hand, word, sri, sci, eri, eci);
 		currentScore += points;
 		b.clearCoefficients(sri, sci, eri, eci);
 	}

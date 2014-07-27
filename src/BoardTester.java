@@ -13,10 +13,8 @@ public class BoardTester {
 		b.updateBoardTemplate();
 		
 		Player p = new Player();
-		p.fillHandUser(b, "q", "q");
-		
-	
-
+		p.fillHandUser(b, "q", "u", "i", "x", "o", "t", "e");
+		b.getOptimalWord(p, d);
 	}
 
 }
