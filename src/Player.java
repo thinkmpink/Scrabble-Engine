@@ -19,7 +19,7 @@ public class Player {
 	}
 
 	/**
-	 * Fills the user's hand with inputted String letters 
+	 * Fills the user's hand with inputed String letters 
 	 * @param b
 	 * @param letter
 	 */
@@ -84,8 +84,7 @@ public class Player {
 	public void playWord(String word, int sri, int sci, int eri, int eci, Board b) {
 		this.useLettersHand(word, sri, sci, eri, eci, b);
 		b.addWord(word, sri, sci, eri, eci);
-		int points = b.wordPoints(hand, word, sri, sci, eri, eci);
-		currentScore += points;
+		currentScore += b.totalPoints(hand, word, sri, sci, eri, eci);
 		b.clearCoefficients(sri, sci, eri, eci);
 	}
 	

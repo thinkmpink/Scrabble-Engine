@@ -727,10 +727,10 @@ public class Board {
 					}
 					else {
 						if (this.validWord(hand, currentWord, r, c, r, horizIndex, d)) {
-							pointsH = this.wordPoints(hand, currentWord, r, c, r, horizIndex); //verticalIndex
+							pointsH = this.totalPoints(hand, currentWord, r, c, r, horizIndex); //verticalIndex
 						}
 						if (this.validWord(hand, currentWord, r, c, verticalIndex, c, d)) {
-							pointsV = this.wordPoints(hand, currentWord, r, c, verticalIndex, c);
+							pointsV = this.totalPoints(hand, currentWord, r, c, verticalIndex, c);
 						}
 					}	
 
@@ -772,10 +772,8 @@ public class Board {
 			optimalWord[3] = Integer.toString(emptySpot[1]);
 			optimalWord[4] = Integer.toString(emptySpot[0]);
 			optimalWord[5] = Integer.toString(emptySpot[1]);
-			System.out.println("no optimal word");
 		}
 		return optimalWord;
-
 	}
 	
 	public String[] getOptimalWord(Player p, Dictionary d) {
@@ -919,8 +917,6 @@ public class Board {
 		}
 		int wCoefficients = this.wordCoefficients(sri, sci, eri, eci);
 		int[] letterValue = new int[15];
-		
-		int bonus = this.bonus(hand, word, sri, sci, eri, eci);
 
 		for (int i = 0; i < word.length(); i++) {
 			letterValue[i] = letterPoints(word.substring(i, i+1));
@@ -928,14 +924,49 @@ public class Board {
 			points += letterValue[i];
 		}
 		points *= wCoefficients;
-		points += bonus;
-
 		return points;
 	}
 
 	public int wordPoints(ArrayList<String> hand, String word, int sri, int sci, int eri, int eci) {
-		return this.setWordPoints(hand, word, sri, sci, eri, eci);
+		int points = this.setWordPoints(hand, word, sri, sci, eri, eci);
+		points += this.bonus(hand, word, sri, sci, eri, eci);
+		return points;
 	}
+	
+	/**
+	 * Combines points for the word played and those for any hooks
+	 * @param hand
+	 * @param word
+	 * @param sri
+	 * @param sci
+	 * @param eri
+	 * @param eci
+	 * @return
+	 */
+	public int totalPoints(ArrayList<String> hand, String word, int sri, int sci, int eri, int eci) {
+		int points=0;
+		points += this.setWordPoints(hand, word, sri, sci, eri, eci);
+		points += this.hookPoints(hand, word, sri, sci, eri, eci);
+		return points;
+	}
+	
+	private int hookPoints(ArrayList<String> hand, String word, int sri, int sci, int eri, int eci) {
+		int points=0;
+		String[][] hooks = this.getHooks(word, sri, sci, eri, eci);
+		for(int i=0; i<word.length(); i++) {
+			if(hooks[i][0].length()>1) { //if there's an actual word at the spot
+				if(scrabbleBoard[Integer.parseInt(hooks[i][1])][Integer.parseInt(hooks[i][2])][0] == '-'){
+					points += this.setWordPoints(hand, hooks[i][0], 
+									Integer.parseInt(hooks[i][1]), 
+									Integer.parseInt(hooks[i][2]), 
+									Integer.parseInt(hooks[i][3]), 
+									Integer.parseInt(hooks[i][4]));					
+				}
+			}
+		}
+		return points;
+	}
+	
 	
 	
 	/**
@@ -960,6 +991,36 @@ public class Board {
 	/*
 	 * COMPLEX BOARD-INTERACTIONS METHODS
 	 */
+	
+	/**
+	 * @return the hooks as a 2d array with [(0) the hook, (1) its sri, 
+	 * (2) its sci, (3) its eri, (4) its eci]
+	 * @param word
+	 * @param sri
+	 * @param sci
+	 * @param eri
+	 * @param eci
+	 * 
+	 */
+	public String[][] getHooks(String word, int sri, int sci, int eri, int eci) {
+		String[][] hooks = new String[word.length()][5];
+		//hooks contains [(0) the hook, (1) its sri, (2) its sci, (3) its eri, (4) its eci ]
+		for(int i=0; i<word.length(); i++) {
+			if (this.isHoriz(sci, eci)){
+				String[] perp = this.perpWordArray(word, sri, sci, eri, eci, sri, sci+i);
+				for (int j=0; j<perp.length; j++) {
+					hooks[i][j] = perp[j]; 
+				}
+			}
+			else {
+				String[] perp = this.perpWordArray(word, sri, sci, eri, eci, sri+i, sci);
+				for (int j=0; j<perp.length; j++) {
+					hooks[i][j] = perp[j]; 
+				}
+			}
+		}
+		return hooks;
+	}
 	
 	/**
 	 * @return "true" if at least one letter can attach to a given spot on the Board
@@ -1219,6 +1280,85 @@ public class Board {
 	}
 		
 	
+	/**
+	 * Returns the word that's formed using a letter from a newly placed word 
+	 * (assuming there is such a word) on long part of word
+	 *  - If there is no such word, return a blank string (e.g. "")
+	 *  - Returns the word's indexes as indexes 1-4 in the array
+	 * @param word
+	 * @param sri
+	 * @param sci
+	 * @param eri
+	 * @param eci
+	 * @param rI
+	 * @param cI
+	 * @returns an array containing a String word and four String indexes
+	 */
+	public String[] perpWordArray(String word, int sri, int sci, int eri, int eci, int rI, int cI) {
+		
+		this.updateBoardTemplate();
+		this.addWordNaive(word, sri, sci, eri, eci);
+		String newWord = "";
+		String[] perp = new String[5];
+		ArrayList<Character> letterList = new ArrayList<Character>();
+		
+		if(this.isHoriz(sci, eci)){
+			int i=0;
+			while((boardTemplate[rI-i][cI][0] != '-') && (rI - i > 0)){
+				i++;
+			}
+			if(rI-i > 0) {
+				i--;
+			}
+			int physicallyHighestRI = rI - i;
+			int j=0;
+			while((boardTemplate[rI+j][cI][0] != '-') && (rI + j < 14)){
+				j++;
+			}
+			if(rI+j < 14) {
+				j--;
+			}
+			int physicallyLowestRI = rI + j;
+			for(int k = physicallyHighestRI; k < physicallyLowestRI+1; k++){
+				letterList.add(boardTemplate[k][cI][0]);
+			}
+			newWord = this.listToWord(letterList);
+			perp[0] = newWord;
+			perp[1] = String.valueOf(physicallyHighestRI); //System.out.println(perp[1]);
+			perp[2] = String.valueOf(cI); //System.out.println(perp[2]);
+			perp[3] = String.valueOf(physicallyLowestRI); //System.out.println(perp[3]);
+			perp[4] = String.valueOf(cI); //System.out.println(perp[4]);
+			//System.out.println("end pwArray");
+		}
+		else{
+			int i=0;
+			while((boardTemplate[rI][cI-i][0] != '-') && (cI - i > 0)){
+				i++;
+			}
+			if(cI-i>0){
+				i--;
+			}
+			int leftCI = cI - i;
+			int j=0;
+			while((boardTemplate[rI][cI+j][0] != '-') && (cI + j < 14)){
+				j++;
+			}
+			if(cI+j < 14) {
+				j--;
+			}
+			int rightCI = cI + j;
+			for(int k = leftCI; k < rightCI+1; k++){
+				letterList.add(boardTemplate[rI][k][0]);
+			}
+			newWord = this.listToWord(letterList);
+			perp[0] = newWord;
+			perp[1] = String.valueOf(rI);
+			perp[2] = String.valueOf(leftCI);
+			perp[3] = String.valueOf(rI);
+			perp[4] = String.valueOf(rightCI);
+		}
+		return perp;
+	}
 	
 	/**
 	 * Returns the word that's formed using a letter from a newly placed word 
@@ -1233,7 +1373,7 @@ public class Board {
 	 * @param cI
 	 * @returns a new String word
 	 */
-	public String perpendicularWords(String word, int sri, int sci, int eri, int eci, int rI, int cI){
+	public String perpendicularWord(String word, int sri, int sci, int eri, int eci, int rI, int cI){
 				
 		this.updateBoardTemplate();
 		this.addWordNaive(word, sri, sci, eri, eci);
@@ -1376,13 +1516,13 @@ public class Board {
 		if(this.isHoriz(sci, eci)){
 			newWords.add(this.parallelWord(word, sri, sci, eri, eci));
 			for(int i = 0; i < word.length(); i++){ 
-				newWords.add(this.perpendicularWords(word, sri, sci, eri, eci, sri, sci + i));
+				newWords.add(this.perpendicularWord(word, sri, sci, eri, eci, sri, sci + i));
 			}
 		}
 		else{
 			newWords.add(this.parallelWord(word, sri, sci, eri, eci));
 			for(int i = 0; i < word.length(); i++){
-				newWords.add(this.perpendicularWords(word, sri, sci, eri, eci, sri + i, sci));
+				newWords.add(this.perpendicularWord(word, sri, sci, eri, eci, sri + i, sci));
 			}	
 		}
 		
@@ -1390,8 +1530,8 @@ public class Board {
 			if(newWords.get(k).length() > 1){
 				if(!d.wordInDict(newWords.get(k))){
 					newWordsExist = false;
-				} // fill newWordsReal with words that
-			} 	  // are actually in the dictionary
+				}
+			} 	  
 		}
 		return newWordsExist;
 	}
